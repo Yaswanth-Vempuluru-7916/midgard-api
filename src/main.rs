@@ -1,11 +1,15 @@
 use axum::{Router, routing::get};
 use db::mongo::connect_to_mongo;
 use config::settings::Settings;
+use mongodb::Collection;
 // use routes::register_routes; // Commented out for now
 // use std::sync::Arc;
 // use tokio::net::TcpListener;
 use tracing::{info, Level};
 use tracing_subscriber;
+
+use db::models::DepthHistory;
+// use mongodb::bson::doc;
 
 mod config;
 mod db;
@@ -31,6 +35,30 @@ async fn main() {
             println!("❌ MongoDB Connection Failed: {:?}", e);
         }
     };
+
+    let db = db_client.database("midgard-vault");
+    let collection = db.collection("depth_history");
+
+    let test_data = DepthHistory {
+        id: None,
+        asset_depth: "100000".to_string(),
+        asset_price: 2000.50,
+        asset_price_usd: 2700.75,
+        liquidity_units: "500000".to_string(),
+        members_count: 1500,
+        rune_depth: "750000".to_string(),
+        start_time: 1738627200,
+        end_time: 1738713600,
+    };
+
+    let insert_result = collection.insert_one(test_data, None).await;
+    
+    match insert_result {
+        Ok(res) => println!("✅ Test Data Inserted: {:?}", res.inserted_id),
+        Err(e) => println!("❌ Failed to Insert Data: {:?}", e),
+    }
+
+
 
     // let db_client = Arc::new(db_client); // No need for Arc if we are just testing DB
 
