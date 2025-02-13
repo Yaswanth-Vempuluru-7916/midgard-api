@@ -1,0 +1,30 @@
+[package]
+name = "midgard-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Web framework
+axum = "0.7"  
+tokio = { version = "1", features = ["full"] }
+
+# MongoDB Driver
+mongodb = "2.8"
+
+# Serialization & Deserialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Env file support
+dotenvy = "0.15"
+
+# Async Runtime
+async-trait = "0.1"
+
+# Logging & Debugging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# OpenAPI Documentation
+utoipa = { version = "4", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "4", features = ["axum"] }
