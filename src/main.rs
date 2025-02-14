@@ -67,7 +67,7 @@ async fn verify_data(db: Arc<Database>) {
                 while let Some(doc) = cursor.next().await {
                     match doc {
                         Ok(document) => {
-                            println!("{:#?}", document);
+                            // println!("{:#?}", document);
                             count += 1;
                         }
                         Err(e) => println!("❌ Error reading `{}`: {:?}", display_name, e),
