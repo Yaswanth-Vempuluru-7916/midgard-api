@@ -126,8 +126,8 @@ pub struct EarningsHistory {
     #[serde(rename = "liquidityEarnings", deserialize_with = "deserialize_string_to_number")]
     pub liquidity_earnings: f64,
 
-    #[serde(rename = "avgNodeCount", deserialize_with = "deserialize_string_to_number_i32")]
-    pub avg_node_count: i32,  
+    #[serde(rename = "avgNodeCount", deserialize_with = "deserialize_string_to_number")]
+    pub avg_node_count: f64,  
 
     #[serde(rename = "runePriceUSD", deserialize_with = "deserialize_string_to_number")]
     pub rune_price_usd: f64,
@@ -185,8 +185,8 @@ pub struct EarningsHistoryMeta {
     #[serde(rename = "liquidityEarnings", deserialize_with = "deserialize_string_to_number")]
     pub liquidity_earnings: f64,
 
-    #[serde(rename = "avgNodeCount", deserialize_with = "deserialize_string_to_number_i32")]
-    pub avg_node_count: i32,  
+    #[serde(rename = "avgNodeCount", deserialize_with = "deserialize_string_to_number")]
+    pub avg_node_count: f64,  
 
     #[serde(rename = "runePriceUSD", deserialize_with = "deserialize_string_to_number")]
     pub rune_price_usd: f64,

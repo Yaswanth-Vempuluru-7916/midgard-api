@@ -19,9 +19,9 @@ pub async fn fetch_and_store_data(db: Arc<Database>) {
 
     // Fetch & store each dataset
     // fetch_and_store_depth_history(&client, &db, six_months_ago, now).await;
-    // fetch_and_store_earnings_history(&client, &db, six_months_ago, now).await;
+    fetch_and_store_earnings_history(&client, &db, six_months_ago, now).await;
     // fetch_and_store_swaps_history(&client, &db, six_months_ago, now).await;
-    fetch_and_store_rune_pool_history(&client, &db, six_months_ago, now).await;
+    // fetch_and_store_rune_pool_history(&client, &db, six_months_ago, now).await;
 }
 
 /// Fetch and store depth history
@@ -31,10 +31,10 @@ pub async fn fetch_and_store_data(db: Arc<Database>) {
 // }
 
 /// Fetch and store earnings history
-// async fn fetch_and_store_earnings_history(client: &Client, db: &Arc<Database>, start_time: i64, end_time: i64) {
-//     let collection: Collection<EarningsHistoryDocument> = db.collection("earnings_history");
-//     fetch_paginated_data(client, &collection, "earnings", start_time, end_time).await;
-// }
+async fn fetch_and_store_earnings_history(client: &Client, db: &Arc<Database>, start_time: i64, end_time: i64) {
+    let collection: Collection<EarningsHistoryDocument> = db.collection("earnings_history");
+    fetch_paginated_data(client, &collection, "earnings", start_time, end_time).await;
+}
 
 /// Fetch and store swaps history
 // async fn fetch_and_store_swaps_history(client: &Client, db: &Arc<Database>, start_time: i64, end_time: i64) {
