@@ -43,7 +43,7 @@ pub struct DepthHistory {
 }
 
 /// Represents metadata for depth history
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Default)]
 pub struct DepthHistoryMeta {
     #[serde(rename = "endAssetDepth", deserialize_with = "deserialize_string_to_number")]
     pub end_asset_depth: f64,
