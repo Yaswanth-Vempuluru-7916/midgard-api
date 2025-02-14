@@ -365,8 +365,8 @@ pub struct RunePoolHistory {
     #[serde(rename = "endTime", deserialize_with = "deserialize_string_to_number_i64")]
     pub end_time: i64,  
 
-    #[serde(rename = "depth", deserialize_with = "deserialize_string_to_number")]
-    pub depth: f64,
+    // #[serde(rename = "depth", deserialize_with = "deserialize_string_to_number")]
+    // pub depth: f64,
 
     #[serde(rename = "count", deserialize_with = "deserialize_string_to_number_i32")]
     pub count: i32,  
