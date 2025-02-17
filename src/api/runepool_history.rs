@@ -11,6 +11,11 @@ pub struct RunePoolHistoryParams {
     pub count: Option<usize>,     // Number of intervals (max 400)
     pub from: Option<i64>,        // Start timestamp
     pub to: Option<i64>,          // End timestamp
+    pub page: Option<usize>,      // Page number for pagination
+    pub limit: Option<usize>,     // Limit the number of items per page
+    pub sort: Option<String>,     // Sorting field (e.g., "startTime", "endTime")
+    pub order: Option<String>,    // Sort order ("asc", "desc")
+    pub filters: Option<String>,  // Filtering conditions (e.g., "count>10")
 }
 
 #[derive(Debug, Serialize)]
@@ -45,11 +50,16 @@ pub async fn get_rune_pool_history(
 ) -> Json<RunePoolHistoryResponse> {
     let collection: Collection<RunePoolHistoryDocument> = db.collection("rune_pool_history");
 
-    let count = params.count.unwrap_or(10).min(400);
+    let count = params.count.unwrap_or(10).min(400); // Handle count with max limit of 400
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);
 
     let from = params.from.unwrap_or(0);
     let to = params.to.unwrap_or(i64::MAX);
+
+    let page = params.page.unwrap_or(1); // Default page is 1
+    let limit = params.limit.unwrap_or(10); // Default limit is 10
+
+    let skip = (page - 1) * limit;
 
     let mut pipeline = vec![];
 
@@ -60,6 +70,21 @@ pub async fn get_rune_pool_history(
             "meta.endTime": { "$gte": from }
         }
     });
+
+    // **Apply Filters (if any)**
+    if let Some(filters) = params.filters {
+        // Example: Filters could be a simple condition like "count>10"
+        // This is a basic example and can be extended to more complex filter logic
+        let filter_doc = doc! {
+            "$expr": {
+                "$gt": [
+                    { "$sum": "$intervals.count" },
+                    10
+                ]
+            }
+        };
+        pipeline.push(filter_doc);
+    }
 
     // **Unwind intervals array**
     pipeline.push(doc! { "$unwind": "$intervals" });
@@ -89,11 +114,24 @@ pub async fn get_rune_pool_history(
         }
     });
 
-    // **Sort results by `startTime` in ascending order**
-    pipeline.push(doc! { "$sort": { "_id.intervalStart": 1 } });
+    // **Sort by the given sorting field and order (if specified)**
+    if let Some(sort) = &params.sort {
+        let sort_doc = if let Some(order) = &params.order {
+            match order.as_str() {
+                "desc" => doc! { sort.clone(): -1 },
+                _ => doc! { sort.clone(): 1 }, // Default is ascending
+            }
+        } else {
+            doc! { "startTime": 1 } // Default sorting by startTime in ascending order
+        };
+        pipeline.push(doc! { "$sort": sort_doc });
+    }
 
     // **Limit the number of records based on `count`**
     pipeline.push(doc! { "$limit": count as i64 });
+
+    // **Skip for pagination**
+    pipeline.push(doc! { "$skip": skip as i64 });
 
     // **Execute the aggregation pipeline**
     let mut cursor = collection.aggregate(pipeline, None).await.unwrap();

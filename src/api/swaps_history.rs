@@ -5,13 +5,16 @@ use std::sync::Arc;
 use futures::stream::StreamExt; // Needed for Cursor to use `.next()`
 use crate::db::models::{SwapsHistoryDocument, SwapsHistory, SwapsHistoryMeta};
 
-
 #[derive(Debug, Deserialize)]
 pub struct SwapsHistoryParams {
     pub interval: Option<String>, // "hour", "day", "week", etc.
     pub count: Option<usize>,     // Number of intervals (max 400)
     pub from: Option<i64>,        // Start timestamp
     pub to: Option<i64>,          // End timestamp
+    pub page: Option<usize>,      // Page for pagination
+    pub limit: Option<usize>,     // Limit for pagination
+    pub sort: Option<String>,     // Sort field (e.g., "startTime", "endTime")
+    pub order: Option<String>,    // Sort order ("asc" or "desc")
 }
 
 #[derive(Debug, Serialize)]
@@ -51,6 +54,23 @@ pub async fn get_swaps_history(
 
     let from = params.from.unwrap_or(0);
     let to = params.to.unwrap_or(i64::MAX);
+
+    let page = params.page.unwrap_or(1);
+    let limit = params.limit.unwrap_or(10);
+
+    // Convert pagination values to BSON types
+    let bson_skip = Bson::Int64(((page - 1) * limit) as i64);
+    let bson_limit = Bson::Int64(limit as i64);
+
+    // Define the sort field and order (ascending or descending)
+    let sort_field = params.sort.unwrap_or_else(|| "startTime".to_string());
+    let sort_order = match params.order.as_deref() {
+        Some("desc") => -1, // descending
+        _ => 1, // ascending (default)
+    };
+
+    let mut sort_doc = doc! {};
+    sort_doc.insert(sort_field, Bson::Int32(sort_order));
 
     let mut pipeline = vec![];
 
@@ -107,11 +127,14 @@ pub async fn get_swaps_history(
         }
     });
 
-    // **Sort results by `startTime` in ascending order**
-    pipeline.push(doc! { "$sort": { "_id.intervalStart": 1 } });
+    // **Sort results by the specified sort field**
+    pipeline.push(doc! { "$sort": sort_doc });
 
-    // **Limit the number of records based on `count`**
-    pipeline.push(doc! { "$limit": count as i64 });
+    // **Skip based on page and limit**
+    pipeline.push(doc! { "$skip": bson_skip });
+
+    // **Limit the number of records based on `limit`**
+    pipeline.push(doc! { "$limit": bson_limit });
 
     // **Execute the aggregation pipeline**
     let mut cursor = collection.aggregate(pipeline, None).await.unwrap();
