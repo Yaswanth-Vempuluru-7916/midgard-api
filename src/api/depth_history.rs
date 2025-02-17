@@ -7,10 +7,15 @@ use crate::db::models::{DepthHistoryDocument, DepthHistory};
 
 #[derive(Debug, Deserialize)]
 pub struct DepthHistoryParams {
-    pub interval: Option<String>, // "hour", "day", "week", etc.
-    pub count: Option<usize>,     // Number of intervals (only used with interval)
-    pub from: Option<i64>,        // Start timestamp
-    pub to: Option<i64>,          // End timestamp
+    pub interval: Option<String>,
+    pub count: Option<usize>,
+    pub limit: Option<usize>,  // Limit for pagination
+    pub page: Option<usize>,   // Pagination page
+    pub from: Option<i64>,
+    pub to: Option<i64>,
+    pub sort_by: Option<String>, // Sorting field
+    pub order: Option<String>,   // "asc" or "desc"
+    pub filters: Option<Vec<String>>, // Example: ["assetDepth>1000", "runeDepth<500"]
 }
 
 /// **Response Meta**
@@ -50,10 +55,11 @@ pub async fn get_depth_history(
 ) -> Json<DepthHistoryResponse> {
     let collection: Collection<DepthHistoryDocument> = db.collection("depth_history");
 
-    let count = params.count.unwrap_or(10).min(400);
+    let count = params.count.unwrap_or(10);
+    let limit = params.limit.unwrap_or(10);
+    let page = params.page.unwrap_or(1).max(1);
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);
 
-    // **Round `from` down to the nearest interval boundary**
     let from = params.from.map(|f| f - (f % interval_seconds)).unwrap_or(0);
     let to = params.to.unwrap_or(i64::MAX);
 
@@ -76,6 +82,34 @@ pub async fn get_depth_history(
             "intervals.startTime": { "$gte": from }
         }
     });
+
+    // **Apply dynamic filters**
+    if let Some(filters) = &params.filters {
+        let mut filter_conditions = vec![];
+        for filter in filters {
+            let parts: Vec<&str> = filter.split(|c| c == '>' || c == '<' || c == '=').collect();
+            if parts.len() == 2 {
+                let field = parts[0].trim();
+                let value: f64 = parts[1].trim().parse().unwrap_or(0.0);
+                let operator = if filter.contains(">=") {
+                    "$gte"
+                } else if filter.contains("<=") {
+                    "$lte"
+                } else if filter.contains(">") {
+                    "$gt"
+                } else if filter.contains("<") {
+                    "$lt"
+                } else {
+                    "$eq"
+                };
+
+                filter_conditions.push(doc! { format!("intervals.{}", field): { operator: value } });
+            }
+        }
+        if !filter_conditions.is_empty() {
+            pipeline.push(doc! { "$match": { "$and": filter_conditions } });
+        }
+    }
 
     // **Group by interval boundaries**
     pipeline.push(doc! {
@@ -103,11 +137,21 @@ pub async fn get_depth_history(
         }
     });
 
-    // **Sort results by `startTime` in ascending order**
-    pipeline.push(doc! { "$sort": { "_id.intervalStart": 1 } });
+    // **Sorting**
+    if let Some(sort_by) = &params.sort_by {
+        let sort_order = match params.order.as_deref() {
+            Some("desc") => -1,
+            _ => 1,
+        };
+        pipeline.push(doc! { "$sort": { sort_by: sort_order } });
+    } else {
+        pipeline.push(doc! { "$sort": { "_id.intervalStart": 1 } });
+    }
 
-    // **Limit results based on `count`**
-    pipeline.push(doc! { "$limit": count as i64 });
+    // **Pagination**
+    let skip_count = (page - 1) * limit;
+    pipeline.push(doc! { "$skip": skip_count as i64 });
+    pipeline.push(doc! { "$limit": limit as i64 });
 
     // **Execute the pipeline**
     let mut cursor = collection.aggregate(pipeline, None).await.unwrap();

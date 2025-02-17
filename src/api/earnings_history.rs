@@ -1,5 +1,5 @@
 use axum::{extract::{Query, State}, Json};
-use mongodb::{bson::{self, doc, Document, Bson}, Collection, Database};
+use mongodb::{bson::{self, doc, Bson}, Collection, Database};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use futures::stream::StreamExt;
@@ -11,6 +11,11 @@ pub struct EarningsHistoryParams {
     pub count: Option<usize>,     // Number of intervals (max 400)
     pub from: Option<i64>,        // Start timestamp
     pub to: Option<i64>,          // End timestamp
+    pub limit: Option<usize>,     // Limit for pagination
+    pub page: Option<usize>,      // Pagination page
+    pub sort_by: Option<String>,  // Sorting field
+    pub order: Option<String>,    // "asc" or "desc"
+    pub filters: Option<Vec<String>>, // Example: ["liquidityFees>1000", "blockRewards<500"]
 }
 
 #[derive(Debug, Serialize)]
@@ -46,6 +51,8 @@ pub async fn get_earnings_history(
     let collection: Collection<EarningsHistoryDocument> = db.collection("earnings_history");
 
     let count = params.count.unwrap_or(10).min(400);
+    let limit = params.limit.unwrap_or(10);
+    let page = params.page.unwrap_or(1).max(1);
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);
 
     let from = params.from.map(|f| f - (f % interval_seconds)).unwrap_or(0);
@@ -71,6 +78,34 @@ pub async fn get_earnings_history(
         }
     });
 
+    // **Apply dynamic filters**
+    if let Some(filters) = &params.filters {
+        let mut filter_conditions = vec![];
+        for filter in filters {
+            let parts: Vec<&str> = filter.split(|c| c == '>' || c == '<' || c == '=').collect();
+            if parts.len() == 2 {
+                let field = parts[0].trim();
+                let value: f64 = parts[1].trim().parse().unwrap_or(0.0);
+                let operator = if filter.contains(">=") {
+                    "$gte"
+                } else if filter.contains("<=") {
+                    "$lte"
+                } else if filter.contains(">") {
+                    "$gt"
+                } else if filter.contains("<") {
+                    "$lt"
+                } else {
+                    "$eq"
+                };
+
+                filter_conditions.push(doc! { format!("intervals.{}", field): { operator: value } });
+            }
+        }
+        if !filter_conditions.is_empty() {
+            pipeline.push(doc! { "$match": { "$and": filter_conditions } });
+        }
+    }
+
     // **Group by interval boundaries**
     pipeline.push(doc! {
         "$group": {
@@ -95,11 +130,21 @@ pub async fn get_earnings_history(
         }
     });
 
-    // **Sort results by `startTime` in ascending order**
-    pipeline.push(doc! { "$sort": { "_id.intervalStart": 1 } });
+    // **Sorting**
+    if let Some(sort_by) = &params.sort_by {
+        let sort_order = match params.order.as_deref() {
+            Some("desc") => -1,
+            _ => 1,
+        };
+        pipeline.push(doc! { "$sort": { sort_by: sort_order } });
+    } else {
+        pipeline.push(doc! { "$sort": { "_id.intervalStart": 1 } });
+    }
 
-    // **Limit results based on `count`**
-    pipeline.push(doc! { "$limit": count as i64 });
+    // **Pagination**
+    let skip_count = (page - 1) * limit;
+    pipeline.push(doc! { "$skip": skip_count as i64 });
+    pipeline.push(doc! { "$limit": limit as i64 });
 
     // **Execute the pipeline**
     let mut cursor = collection.aggregate(pipeline, None).await.unwrap();
@@ -123,7 +168,8 @@ pub async fn get_earnings_history(
                     })
                     .collect()
             })
-            .unwrap_or_default();
+            .unwrap_or_else(|_| Vec::new());
+
 
         let interval = EarningsHistory {
             liquidity_fees: doc.get_f64("liquidityFees").unwrap_or(0.0),
@@ -131,7 +177,7 @@ pub async fn get_earnings_history(
             earnings: doc.get_f64("earnings").unwrap_or(0.0),
             bonding_earnings: doc.get_f64("bondingEarnings").unwrap_or(0.0),
             liquidity_earnings: doc.get_f64("liquidityEarnings").unwrap_or(0.0),
-            avg_node_count: doc.get_f64("avgNodeCount").unwrap_or(0.0),
+            avg_node_count: doc.get_f64("avgNodeCount").unwrap_or(0.0) as f64,
             rune_price_usd: doc.get_f64("runePriceUSD").unwrap_or(0.0),
             start_time: doc.get_i64("startTime").unwrap_or(0),
             end_time: doc.get_i64("endTime").unwrap_or(0),
@@ -145,6 +191,7 @@ pub async fn get_earnings_history(
         intervals.push(interval);
     }
 
+    // **Build response meta**
     let meta = EarningsHistoryMetaResponse {
         start_time: meta_start_time.unwrap_or(from),
         end_time: meta_end_time.unwrap_or(to),
