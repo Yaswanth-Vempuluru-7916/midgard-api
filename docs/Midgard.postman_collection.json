@@ -1,0 +1,326 @@
+{
+	"info": {
+		"_postman_id": "93c185c2-14f5-4526-be35-acdf3865cf80",
+		"name": "Midgard",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "35064108"
+	},
+	"item": [
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "depth history",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "earnings history",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "rune-pool-history",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "swaps-history",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Earnings History",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://midgard.ninerealms.com/v2/history/earnings",
+					"protocol": "https",
+					"host": [
+						"midgard",
+						"ninerealms",
+						"com"
+					],
+					"path": [
+						"v2",
+						"history",
+						"earnings"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Swaps History",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://midgard.ninerealms.com/v2/history/earnings",
+					"protocol": "https",
+					"host": [
+						"midgard",
+						"ninerealms",
+						"com"
+					],
+					"path": [
+						"v2",
+						"history",
+						"earnings"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "known Pools",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://midgard.ninerealms.com/v2/knownpools",
+					"protocol": "https",
+					"host": [
+						"midgard",
+						"ninerealms",
+						"com"
+					],
+					"path": [
+						"v2",
+						"knownpools"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RUNEPool Total Members, units history",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://midgard.ninerealms.com/v2/history/runepool",
+					"protocol": "https",
+					"host": [
+						"midgard",
+						"ninerealms",
+						"com"
+					],
+					"path": [
+						"v2",
+						"history",
+						"runepool"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Depths & Price History",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var template = `\r",
+							"<style type=\"text/css\">\r",
+							"    .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}\r",
+							"    .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}\r",
+							"    .tftable tr {background-color:#ffffff;}\r",
+							"    .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}\r",
+							"    .tftable tr:hover {background-color:#e0ffff;}\r",
+							"</style>\r",
+							"\r",
+							"<table class=\"tftable\" border=\"1\">\r",
+							"    <tr>\r",
+							"        <th>Asset Depth</th>\r",
+							"        <th>Asset Price</th>\r",
+							"        <th>Asset Price USD</th>\r",
+							"        <th>End Time</th>\r",
+							"        <th>Liquidity Units</th>\r",
+							"        <th>LUVI</th>\r",
+							"        <th>Members Count</th>\r",
+							"        <th>Rune Depth</th>\r",
+							"        <th>Start Time</th>\r",
+							"        <th>Synth Supply</th>\r",
+							"        <th>Synth Units</th>\r",
+							"        <th>Units</th>\r",
+							"    </tr>\r",
+							"    \r",
+							"    {{#each response.intervals}}\r",
+							"        <tr>\r",
+							"            <td>{{assetDepth}}</td>\r",
+							"            <td>{{assetPrice}}</td>\r",
+							"            <td>{{assetPriceUSD}}</td>\r",
+							"            <td>{{endTime}}</td>\r",
+							"            <td>{{liquidityUnits}}</td>\r",
+							"            <td>{{luvi}}</td>\r",
+							"            <td>{{membersCount}}</td>\r",
+							"            <td>{{runeDepth}}</td>\r",
+							"            <td>{{startTime}}</td>\r",
+							"            <td>{{synthSupply}}</td>\r",
+							"            <td>{{synthUnits}}</td>\r",
+							"            <td>{{units}}</td>\r",
+							"        </tr>\r",
+							"    {{/each}}\r",
+							"</table>\r",
+							"`;\r",
+							"\r",
+							"function constructVisualizerPayload() {\r",
+							"    return {response: pm.response.json()}\r",
+							"}\r",
+							"\r",
+							"pm.visualizer.set(template, constructVisualizerPayload());"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://midgard.ninerealms.com/v2/history/depths/BTC.BTC",
+					"protocol": "https",
+					"host": [
+						"midgard",
+						"ninerealms",
+						"com"
+					],
+					"path": [
+						"v2",
+						"history",
+						"depths",
+						"BTC.BTC"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Pools",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var template = `\r",
+							"<style type=\"text/css\">\r",
+							"    .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}\r",
+							"    .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}\r",
+							"    .tftable tr {background-color:#ffffff;}\r",
+							"    .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}\r",
+							"    .tftable tr:hover {background-color:#e0ffff;}\r",
+							"</style>\r",
+							"\r",
+							"<table class=\"tftable\" border=\"1\">\r",
+							"    <tr>\r",
+							"        <th>Annual Percentage Rate</th>\r",
+							"        <th>Asset</th>\r",
+							"        <th>Asset Depth</th>\r",
+							"        <th>Asset Price</th>\r",
+							"        <th>Asset Price USD</th>\r",
+							"        <th>Earnings</th>\r",
+							"        <th>Earnings Annual as Percent of Depth</th>\r",
+							"        <th>Liquidity Units</th>\r",
+							"        <th>LP Luvi</th>\r",
+							"        <th>Native Decimal</th>\r",
+							"        <th>Pool APY</th>\r",
+							"        <th>Rune Depth</th>\r",
+							"        <th>Savers APR</th>\r",
+							"        <th>Savers Depth</th>\r",
+							"        <th>Savers Units</th>\r",
+							"        <th>Savers Yield Share</th>\r",
+							"        <th>Status</th>\r",
+							"        <th>Synth Supply</th>\r",
+							"        <th>Synth Units</th>\r",
+							"        <th>Total Collateral</th>\r",
+							"        <th>Total Debt Tor</th>\r",
+							"        <th>Units</th>\r",
+							"        <th>Volume 24h</th>\r",
+							"    </tr>\r",
+							"    \r",
+							"    {{#each response}}\r",
+							"        <tr>\r",
+							"            <td>{{annualPercentageRate}}</td>\r",
+							"            <td>{{asset}}</td>\r",
+							"            <td>{{assetDepth}}</td>\r",
+							"            <td>{{assetPrice}}</td>\r",
+							"            <td>{{assetPriceUSD}}</td>\r",
+							"            <td>{{earnings}}</td>\r",
+							"            <td>{{earningsAnnualAsPercentOfDepth}}</td>\r",
+							"            <td>{{liquidityUnits}}</td>\r",
+							"            <td>{{lpLuvi}}</td>\r",
+							"            <td>{{nativeDecimal}}</td>\r",
+							"            <td>{{poolAPY}}</td>\r",
+							"            <td>{{runeDepth}}</td>\r",
+							"            <td>{{saversAPR}}</td>\r",
+							"            <td>{{saversDepth}}</td>\r",
+							"            <td>{{saversUnits}}</td>\r",
+							"            <td>{{saversYieldShare}}</td>\r",
+							"            <td>{{status}}</td>\r",
+							"            <td>{{synthSupply}}</td>\r",
+							"            <td>{{synthUnits}}</td>\r",
+							"            <td>{{totalCollateral}}</td>\r",
+							"            <td>{{totalDebtTor}}</td>\r",
+							"            <td>{{units}}</td>\r",
+							"            <td>{{volume24h}}</td>\r",
+							"        </tr>\r",
+							"    {{/each}}\r",
+							"</table>\r",
+							"`;\r",
+							"\r",
+							"function constructVisualizerPayload() {\r",
+							"    return {response: pm.response.json()}\r",
+							"}\r",
+							"\r",
+							"pm.visualizer.set(template, constructVisualizerPayload());"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://midgard.ninerealms.com/v2/pools?period=all",
+					"protocol": "https",
+					"host": [
+						"midgard",
+						"ninerealms",
+						"com"
+					],
+					"path": [
+						"v2",
+						"pools"
+					],
+					"query": [
+						{
+							"key": "period",
+							"value": "all"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
