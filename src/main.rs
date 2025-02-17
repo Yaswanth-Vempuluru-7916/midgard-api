@@ -1,20 +1,19 @@
 use axum::Router;
 use crate::db::mongo::connect_to_mongo;
 use crate::config::settings::Settings;
-use mongodb::{Database, bson::doc};
-use tracing::{info, Level};
-use tracing_subscriber;
-use std::sync::Arc;
+use mongodb::{Database};
 use tokio::time::{interval, Duration};
-use crate::utils::midgard_fetch::fetch_and_store_data;
-use futures::stream::StreamExt;
+use std::sync::Arc;
 use tokio::net::TcpListener;
-use crate::api::create_api_router; // ✅ Import API Router
+use crate::api::create_api_router; // Import API Router
+use crate::utils::midgard_fetch::fetch_and_store_data; // Import the function to fetch and store data
+use tracing_subscriber;
+use tracing::{info, Level};
 
 mod config;
 mod db;
 mod utils;
-mod api; // ✅ Register API module
+mod api;
 
 #[tokio::main]
 async fn main() {
@@ -34,14 +33,21 @@ async fn main() {
         Err(e) => println!("❌ MongoDB Connection Failed: {:?}", e),
     };
 
-    // // 🔴 Commented out: Fetching & storing initial data
-    // fetch_and_store_data(Arc::clone(&db)).await;
-
-    // // 🔴 Commented out: Verifying stored data
-    // verify_data(Arc::clone(&db)).await;
-
     // ✅ Create API Router
     let app = create_api_router(Arc::clone(&db));
+
+    // Start the scheduled job to fetch data every hour
+    tokio::spawn({
+        let db = Arc::clone(&db);
+        async move {
+            let mut interval = interval(Duration::from_secs(3600)); // Set the interval to 1 hour
+            loop {
+                interval.tick().await;
+                println!("🔄 Fetching fresh data...");
+                fetch_and_store_data(Arc::clone(&db)).await;
+            }
+        }
+    });
 
     // ✅ Start Server
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
