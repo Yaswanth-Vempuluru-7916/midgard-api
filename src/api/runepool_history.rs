@@ -1,8 +1,8 @@
 use axum::{extract::{Query, State}, Json};
-use mongodb::{bson::{doc, Bson}, Collection, Database};
+use mongodb::{bson::doc, Collection, Database};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use crate::db::models::{RunePoolHistoryDocument, RunePoolHistory, RunePoolHistoryMeta};
+use crate::db::models::{RunePoolHistoryDocument, RunePoolHistory};
 use futures::stream::StreamExt; // Bring in StreamExt to use `.next()`
 
 #[derive(Debug, Deserialize)]
@@ -72,7 +72,7 @@ pub async fn get_rune_pool_history(
     });
 
     // **Apply Filters (if any)**
-    if let Some(filters) = params.filters {
+    if let Some(_filters) = params.filters {
         // Example: Filters could be a simple condition like "count>10"
         // This is a basic example and can be extended to more complex filter logic
         let filter_doc = doc! {

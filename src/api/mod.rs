@@ -1,4 +1,4 @@
-use axum::{Router, routing::get, extract::State};
+use axum::{Router, routing::get};
 use std::sync::Arc;
 use mongodb::Database;
 

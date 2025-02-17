@@ -1,5 +1,5 @@
 use axum::{extract::{Query, State}, Json};
-use mongodb::{bson::{doc, Document}, Collection, Database};
+use mongodb::{bson::doc, Collection, Database};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use futures::stream::StreamExt;
@@ -55,7 +55,7 @@ pub async fn get_depth_history(
 ) -> Json<DepthHistoryResponse> {
     let collection: Collection<DepthHistoryDocument> = db.collection("depth_history");
 
-    let count = params.count.unwrap_or(10);
+    let _count = params.count.unwrap_or(10);
     let limit = params.limit.unwrap_or(10);
     let page = params.page.unwrap_or(1).max(1);
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);

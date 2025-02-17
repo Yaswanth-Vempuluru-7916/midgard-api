@@ -1,9 +1,10 @@
 use dotenvy::dotenv;
 use std::env;
 
-pub struct Settings{
-    pub mongo_uri  : String,
-    pub port : u16,
+#[allow(dead_code)]
+pub struct Settings {
+    pub mongo_uri: String,
+    pub port: u16,
 }
 
 impl Settings{

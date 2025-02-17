@@ -13,7 +13,7 @@ where
             if s.is_empty() || s == "null" {
                 Ok(0.0)
             } else {
-                s.parse::<f64>().map_err(|e| {
+                s.parse::<f64>().map_err(|_e| {
                     // println!("🚨 [ERROR] Failed to parse f64: '{}' | Error: {:?}", s, e);
                     serde::de::Error::custom(format!("Invalid f64: {}", s))
                 })
@@ -42,7 +42,7 @@ where
             if s.is_empty() || s == "null" {
                 Ok(0)
             } else {
-                s.parse::<i32>().map_err(|e| {
+                s.parse::<i32>().map_err(|_e| {
                     // println!("🚨 [ERROR] Failed to parse i32: '{}' | Error: {:?}", s, e);
                     serde::de::Error::custom(format!("Invalid i32: {}", s))
                 })
@@ -71,7 +71,7 @@ where
             if s.is_empty() || s == "null" {
                 Ok(0)
             } else {
-                s.parse::<i64>().map_err(|e| {
+                s.parse::<i64>().map_err(|_e| {
                     // println!("🚨 [ERROR] Failed to parse i64: '{}' | Error: {:?}", s, e);
                     serde::de::Error::custom(format!("Invalid i64: {}", s))
                 })

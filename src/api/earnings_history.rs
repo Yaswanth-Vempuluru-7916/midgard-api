@@ -50,7 +50,7 @@ pub async fn get_earnings_history(
 ) -> Json<EarningsHistoryResponse> {
     let collection: Collection<EarningsHistoryDocument> = db.collection("earnings_history");
 
-    let count = params.count.unwrap_or(10).min(400);
+    let _count = params.count.unwrap_or(10).min(400);
     let limit = params.limit.unwrap_or(10);
     let page = params.page.unwrap_or(1).max(1);
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);

@@ -3,7 +3,7 @@ use mongodb::{bson::{doc, Bson}, Collection, Database};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use futures::stream::StreamExt; // Needed for Cursor to use `.next()`
-use crate::db::models::{SwapsHistoryDocument, SwapsHistory, SwapsHistoryMeta};
+use crate::db::models::{SwapsHistoryDocument, SwapsHistory};
 
 #[derive(Debug, Deserialize)]
 pub struct SwapsHistoryParams {

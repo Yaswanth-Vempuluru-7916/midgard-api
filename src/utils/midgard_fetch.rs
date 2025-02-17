@@ -1,9 +1,8 @@
 use reqwest::Client;
 use mongodb::{bson::doc, Collection, Database};
-use chrono::{Utc, Duration};
+use chrono::Utc;
 use std::sync::Arc;
 use serde_json::Value;
-use futures::stream::StreamExt;  // ✅ Ensure this is imported
 
 
 use crate::db::models::{DepthHistoryDocument, EarningsHistoryDocument, RunePoolHistoryDocument, SwapsHistoryDocument};
@@ -84,7 +83,7 @@ async fn fetch_paginated_data<T>(
     client: &Client,
     collection: &Collection<T>,
     endpoint: &str,
-    mut start_time: i64,
+    start_time: i64,
     end_time: i64,
 ) where
     T: serde::de::DeserializeOwned + serde::Serialize + std::fmt::Debug,

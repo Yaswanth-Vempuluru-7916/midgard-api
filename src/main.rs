@@ -1,14 +1,12 @@
-use axum::Router;
 use crate::db::mongo::connect_to_mongo;
 use crate::config::settings::Settings;
-use mongodb::{Database};
 use tokio::time::{interval, Duration};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use crate::api::create_api_router; // Import API Router
 use crate::utils::midgard_fetch::fetch_and_store_data; // Import the function to fetch and store data
 use tracing_subscriber;
-use tracing::{info, Level};
+use tracing:: Level;
 
 mod config;
 mod db;
