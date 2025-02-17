@@ -1235,9 +1235,11 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "axum 0.7.9",
+ "bson",
  "chrono",
  "dotenvy",
  "futures",
+ "log",
  "mongodb",
  "reqwest",
  "serde",
