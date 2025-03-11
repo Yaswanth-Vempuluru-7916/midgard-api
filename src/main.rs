@@ -48,7 +48,8 @@ async fn main() {
     });
 
     // ✅ Start Server
-    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("🚀 Server running on http://localhost:3000");
+    let addr = format!("0.0.0.0:{}", settings.port);
+    let listener = TcpListener::bind(&addr).await.unwrap();
+    println!("🚀 Server running on http://localhost:{}", settings.port);
     axum::serve(listener, app).await.unwrap();
 }
