@@ -8,7 +8,6 @@ use crate::db::models::{EarningsHistoryDocument, EarningsHistory, EarningsPool};
 #[derive(Debug, Deserialize)]
 pub struct EarningsHistoryParams {
     pub interval: Option<String>, // "hour", "day", "week", etc.
-    pub count: Option<usize>,     // Number of intervals (max 400)
     pub from: Option<i64>,        // Start timestamp
     pub to: Option<i64>,          // End timestamp
     pub limit: Option<usize>,     // Limit for pagination
@@ -50,7 +49,6 @@ pub async fn get_earnings_history(
 ) -> Json<EarningsHistoryResponse> {
     let collection: Collection<EarningsHistoryDocument> = db.collection("earnings_history");
 
-    let _count = params.count.unwrap_or(10).min(400);
     let limit = params.limit.unwrap_or(10);
     let page = params.page.unwrap_or(1).max(1);
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);
@@ -169,7 +167,6 @@ pub async fn get_earnings_history(
                     .collect()
             })
             .unwrap_or_else(|_| Vec::new());
-
 
         let interval = EarningsHistory {
             liquidity_fees: doc.get_f64("liquidityFees").unwrap_or(0.0),

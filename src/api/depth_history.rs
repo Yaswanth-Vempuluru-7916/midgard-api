@@ -8,7 +8,6 @@ use crate::db::models::{DepthHistoryDocument, DepthHistory};
 #[derive(Debug, Deserialize)]
 pub struct DepthHistoryParams {
     pub interval: Option<String>,
-    pub count: Option<usize>,
     pub limit: Option<usize>,  // Limit for pagination
     pub page: Option<usize>,   // Pagination page
     pub from: Option<i64>,
@@ -55,7 +54,6 @@ pub async fn get_depth_history(
 ) -> Json<DepthHistoryResponse> {
     let collection: Collection<DepthHistoryDocument> = db.collection("depth_history");
 
-    let _count = params.count.unwrap_or(10);
     let limit = params.limit.unwrap_or(10);
     let page = params.page.unwrap_or(1).max(1);
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);

@@ -8,7 +8,6 @@ use crate::db::models::{SwapsHistoryDocument, SwapsHistory};
 #[derive(Debug, Deserialize)]
 pub struct SwapsHistoryParams {
     pub interval: Option<String>, // "hour", "day", "week", etc.
-    pub count: Option<usize>,     // Number of intervals (max 400)
     pub from: Option<i64>,        // Start timestamp
     pub to: Option<i64>,          // End timestamp
     pub page: Option<usize>,      // Page for pagination
@@ -49,7 +48,6 @@ pub async fn get_swaps_history(
 ) -> Json<SwapsHistoryResponse> {
     let collection: Collection<SwapsHistoryDocument> = db.collection("swaps_history");
 
-    let count = params.count.unwrap_or(10).min(400);
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);
 
     let from = params.from.unwrap_or(0);

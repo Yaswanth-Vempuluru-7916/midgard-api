@@ -17,7 +17,7 @@ mod api;
 async fn main() {
     // Initialize logging
     tracing_subscriber::fmt()
-        .with_max_level(Level::INFO)
+        .with_max_level(Level::INFO)//you’ll only write down important updates—like "Server is running" or "Connected to the database"
         .init();
 
     // Load settings

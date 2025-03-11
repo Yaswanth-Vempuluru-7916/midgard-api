@@ -3,12 +3,11 @@ use mongodb::{bson::doc, Collection, Database};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use crate::db::models::{RunePoolHistoryDocument, RunePoolHistory};
-use futures::stream::StreamExt; // Bring in StreamExt to use `.next()`
+use futures::stream::StreamExt;
 
 #[derive(Debug, Deserialize)]
 pub struct RunePoolHistoryParams {
     pub interval: Option<String>, // "hour", "day", "week", etc.
-    pub count: Option<usize>,     // Number of intervals (max 400)
     pub from: Option<i64>,        // Start timestamp
     pub to: Option<i64>,          // End timestamp
     pub page: Option<usize>,      // Page number for pagination
@@ -50,16 +49,14 @@ pub async fn get_rune_pool_history(
 ) -> Json<RunePoolHistoryResponse> {
     let collection: Collection<RunePoolHistoryDocument> = db.collection("rune_pool_history");
 
-    let count = params.count.unwrap_or(10).min(400); // Handle count with max limit of 400
+    let limit = params.limit.unwrap_or(10); // Default limit is 10
+    let page = params.page.unwrap_or(1).max(1); // Default page is 1, minimum 1
     let interval_seconds = params.interval.as_deref().and_then(interval_to_seconds).unwrap_or(3600);
 
     let from = params.from.unwrap_or(0);
     let to = params.to.unwrap_or(i64::MAX);
 
-    let page = params.page.unwrap_or(1); // Default page is 1
-    let limit = params.limit.unwrap_or(10); // Default limit is 10
-
-    let skip = (page - 1) * limit;
+    let skip_count = (page - 1) * limit; // Calculate how many to skip for pagination
 
     let mut pipeline = vec![];
 
@@ -115,8 +112,8 @@ pub async fn get_rune_pool_history(
     });
 
     // **Sort by the given sorting field and order (if specified)**
-    if let Some(sort) = &params.sort {
-        let sort_doc = if let Some(order) = &params.order {
+    if let Some(sort) = params.sort {
+        let sort_doc = if let Some(order) = params.order {
             match order.as_str() {
                 "desc" => doc! { sort.clone(): -1 },
                 _ => doc! { sort.clone(): 1 }, // Default is ascending
@@ -127,11 +124,9 @@ pub async fn get_rune_pool_history(
         pipeline.push(doc! { "$sort": sort_doc });
     }
 
-    // **Limit the number of records based on `count`**
-    pipeline.push(doc! { "$limit": count as i64 });
-
-    // **Skip for pagination**
-    pipeline.push(doc! { "$skip": skip as i64 });
+    // **Pagination: Skip then Limit**
+    pipeline.push(doc! { "$skip": skip_count as i64 });
+    pipeline.push(doc! { "$limit": limit as i64 });
 
     // **Execute the aggregation pipeline**
     let mut cursor = collection.aggregate(pipeline, None).await.unwrap();
